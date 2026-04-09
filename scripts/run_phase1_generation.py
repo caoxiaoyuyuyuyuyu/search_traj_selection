@@ -10,6 +10,7 @@ Usage:
 import argparse
 import json
 import logging
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -18,6 +19,34 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
 )
+
+
+def gpu_precheck(threshold_mb: int = 1000) -> None:
+    """Check GPU memory and attempt cleanup if occupied."""
+    try:
+        result = subprocess.run(
+            ["nvidia-smi", "--query-gpu=memory.used", "--format=csv,noheader,nounits"],
+            capture_output=True, text=True, timeout=10,
+        )
+        mem_used = int(result.stdout.strip().split("\n")[0])
+        if mem_used > threshold_mb:
+            logging.warning("GPU has %dMB in use. Attempting cleanup (pkill vllm)...", mem_used)
+            subprocess.run(["pkill", "-f", "vllm"], timeout=10)
+            time.sleep(3)
+            # Re-check
+            result = subprocess.run(
+                ["nvidia-smi", "--query-gpu=memory.used", "--format=csv,noheader,nounits"],
+                capture_output=True, text=True, timeout=10,
+            )
+            mem_after = int(result.stdout.strip().split("\n")[0])
+            if mem_after > threshold_mb:
+                logging.error("GPU still has %dMB after cleanup. Aborting.", mem_after)
+                sys.exit(1)
+            logging.info("GPU cleanup successful: %dMB → %dMB", mem_used, mem_after)
+        else:
+            logging.info("GPU memory OK: %dMB used", mem_used)
+    except Exception as e:
+        logging.warning("GPU precheck failed (non-fatal): %s", e)
 logger = logging.getLogger(__name__)
 
 DATASETS = [
@@ -55,6 +84,8 @@ def main():
     parser.add_argument("--suffix", type=str, default="",
                         help="Output file suffix (e.g. 'v2' → hotpotqa_trajectories_v2.jsonl)")
     args = parser.parse_args()
+
+    gpu_precheck()
 
     data_dir = Path(args.data_dir)
     corpus_path = data_dir / "corpus" / "wikipedia_subset.jsonl"
