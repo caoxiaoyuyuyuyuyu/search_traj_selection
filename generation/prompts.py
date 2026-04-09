@@ -70,68 +70,77 @@ FEW_SHOT_EXAMPLES = [
         "content": """\
 <think>
 I need to find where the Zambezi River ends (its mouth), then determine \
-which country that is in, and finally find the capital of that country.
-
-First, let me search for where the Zambezi River ends.
+which country that is in, and finally find the capital of that country. \
+I don't know this from memory, so I must search for it.
 </think>
 <search>Zambezi River mouth location</search>
 <results>
-[1] (System-retrieved passage about the Zambezi River flowing through \
-several African countries and emptying into the Indian Ocean in Mozambique.)
+[1] The Zambezi is the fourth-longest river in Africa. It rises in Zambia \
+and flows through eastern Angola, Namibia, Botswana, Zambia, Zimbabwe, \
+and Mozambique, emptying into the Indian Ocean near the city of Quelimane \
+in Mozambique.
 </results>
 <think>
-The Zambezi River empties into the Indian Ocean in Mozambique. So the \
-country where it ends is Mozambique. Now I need the capital of Mozambique.
+The search results show that the Zambezi River empties into the Indian \
+Ocean in Mozambique. So the country where it ends is Mozambique. Now I \
+need to search for the capital of Mozambique.
 </think>
 <search>capital of Mozambique</search>
 <results>
-[1] (System-retrieved passage about Maputo being the capital of Mozambique.)
+[1] Maputo is the capital and largest city of Mozambique. It is located on \
+the western shore of Maputo Bay.
 </results>
 <think>
-The capital of Mozambique is Maputo. I have the complete chain: \
-Zambezi ends in Mozambique, capital is Maputo.
+The search confirms that the capital of Mozambique is Maputo. I have the \
+complete chain: Zambezi ends in Mozambique, capital is Maputo.
 </think>
 Answer: Maputo""",
     },
-    # --- Example 2: 3-hop (comparison) ---
+    # --- Example 2: 3-hop (comparison) — uses less well-known entities ---
     {
         "role": "user",
         "content": (
             "Answer the following NEW question by searching for information step by step. Do NOT reuse any information from previous examples.\n\n"
-            "Question: Were the directors of Jaws and E.T. born in the same city?"
+            "Question: Were the directors of Stalker and Nostalghia born in the same country?"
         ),
     },
     {
         "role": "assistant",
         "content": """\
 <think>
-I need to find the directors of these two films, then compare their \
-birthplaces. Let me start with the first film.
+I need to find the directors of these two films, then check if they were \
+born in the same country. I should not guess — let me search for each.
 </think>
-<search>director of Jaws 1975 film</search>
+<search>director of Stalker 1979 film</search>
 <results>
-[1] (System-retrieved passage identifying the director of the 1975 film.)
+[1] Stalker is a 1979 Soviet science fiction art film directed by Andrei \
+Tarkovsky, loosely based on the novel Roadside Picnic by Arkady and Boris \
+Strugatsky.
 </results>
 <think>
-Found the director. Now let me check the director of the second film.
+Stalker was directed by Andrei Tarkovsky. Now I need to search for the \
+director of Nostalghia.
 </think>
-<search>director of E.T. the Extra-Terrestrial</search>
+<search>director of Nostalghia 1983 film</search>
 <results>
-[1] (System-retrieved passage identifying the director of the 1982 film.)
+[1] Nostalghia is a 1983 art film directed by Andrei Tarkovsky. It was \
+Tarkovsky's first film made outside the Soviet Union, produced in Italy.
 </results>
 <think>
-Both films were directed by the same person. So the question reduces to: \
-was this director born in one city? Let me confirm the birthplace.
+Both films were directed by Andrei Tarkovsky. Since it's the same person, \
+they were obviously born in the same country. But let me confirm his \
+birthplace with a search to give a complete answer.
 </think>
-<search>Steven Spielberg birthplace</search>
+<search>Andrei Tarkovsky birthplace</search>
 <results>
-[1] (System-retrieved passage about the director's birthplace.)
+[1] Andrei Arsenyevich Tarkovsky was born on 4 April 1932 in Zavrazhye, \
+Yuryevetsky District, Ivanovo Industrial Oblast, Soviet Union (now Russia).
 </results>
 <think>
-Since both films were directed by the same person, born in Cincinnati, \
-Ohio, the answer is yes.
+Confirmed: both films were directed by Andrei Tarkovsky, born in the \
+Soviet Union (now Russia). The answer is yes.
 </think>
-Answer: Yes, both Jaws and E.T. were directed by Steven Spielberg, who was born in Cincinnati, Ohio.""",
+Answer: Yes, both Stalker and Nostalghia were directed by Andrei Tarkovsky, who was born in the Soviet Union (Zavrazhye, now Russia).""",
     },
 ]
 
