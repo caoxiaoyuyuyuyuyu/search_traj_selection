@@ -1,0 +1,26 @@
+# Search Trajectory Selection — Dependencies
+# Install: pip install -r requirements.txt
+
+# === Core ML ===
+torch>=2.4.0
+transformers>=4.45.0
+datasets>=3.0.0
+accelerate>=1.0.0
+
+# === Training ===
+trl>=0.12.0
+
+# === Inference ===
+vllm>=0.6.0
+
+# === Retrieval ===
+rank_bm25>=0.2.2
+# pyserini>=0.25.0         # optional: Lucene-based BM25 for larger corpora
+# colbert-ai[faiss-gpu]    # optional: ColBERT dense retrieval
+
+# === Experiment Tracking ===
+wandb>=0.18.0
+
+# === Utilities ===
+pyyaml>=6.0
+einops>=0.8.0

@@ -1,0 +1,119 @@
+# Search Trajectory Selection — Default Experiment Config
+
+project: search_traj_selection
+
+# === Paths ===
+# data_dir: root for large files (Wikipedia dump, indices, model cache, checkpoints).
+# On AutoDL use the data disk; locally override via CLI or env.
+data_dir: /root/autodl-tmp
+
+# === Teacher Model ===
+teacher:
+  model_name: Qwen/Qwen3-32B-AWQ
+  quantization: awq
+  tensor_parallel_size: 2
+  max_model_len: 8192
+  generation:
+    temperature: 0.7
+    top_p: 0.9
+    max_tokens: 4096
+    num_trajectories_per_question: 3  # generate multiple, then select
+
+# === Student Models ===
+students:
+  - name: qwen3-8b
+    model_name: Qwen/Qwen3-8B
+    batch_size: 4
+    learning_rate: 2.0e-5
+    num_epochs: 3
+    max_seq_len: 4096
+  - name: qwen3-4b
+    model_name: Qwen/Qwen3-4B
+    batch_size: 8
+    learning_rate: 2.0e-5
+    num_epochs: 3
+    max_seq_len: 4096
+
+# === Datasets ===
+datasets:
+  - name: hotpotqa
+    hf_path: hotpot_qa
+    hf_config: distractor
+    splits: {train: train, dev: validation}
+  - name: musique
+    hf_path: drt/musique
+    splits: {train: train, dev: validation}
+  - name: 2wikimhqa
+    hf_path: scholarly-shadows/2WikiMultiHopQA
+    splits: {train: train, dev: validation}
+
+# === Retrieval ===
+retrieval:
+  engine: bm25  # bm25 | colbert
+  bm25:
+    k1: 0.9
+    b: 0.4
+    top_k: 5
+  colbert:
+    checkpoint: colbert-ir/colbertv2.0
+    top_k: 5
+  wikipedia:
+    index_path: ${data_dir}/indices/wikipedia_bm25
+    corpus_path: ${data_dir}/corpus/wikipedia_subset.jsonl
+
+# === RSR / SD-RSR ===
+selection:
+  rsr:
+    r_max: 100  # rank clipping threshold
+    batch_size: 8
+  sd_rsr:
+    alpha_values: [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
+    search_decision_tokens:
+      # regex patterns to identify search-decision token spans
+      query_start: "<search>"
+      query_end: "</search>"
+      decision_markers: ["<search>", "<continue>", "<synthesize>"]
+
+# === Training (SFT) ===
+training:
+  output_dir: ${data_dir}/outputs/sft
+  gradient_accumulation_steps: 4
+  warmup_ratio: 0.1
+  weight_decay: 0.01
+  bf16: true
+  logging_steps: 10
+  save_strategy: epoch
+  eval_strategy: epoch
+  seeds: [42, 123]
+
+# === Evaluation ===
+evaluation:
+  metrics: [em, f1]
+  max_new_tokens: 512
+
+# === Experimental Conditions ===
+conditions:
+  - name: random
+    method: random
+    description: "Random trajectory selection (baseline)"
+  - name: correctness
+    method: correctness_only
+    description: "Correctness-only filtering (SimpleDeepSearcher/OpenSeeker baseline)"
+  - name: vanilla_rsr
+    method: rsr
+    description: "Vanilla RSR filtering (full-trajectory token-level RSR)"
+  - name: sd_rsr
+    method: sd_rsr
+    description: "SD-RSR filtering with student-specific optimal α"
+  - name: topocurate
+    method: topocurate_style
+    description: "TopoCurate-style structural filtering adapted to search-reasoning"
+  - name: sd_rsr_gen
+    method: sd_rsr_gen_ssd
+    description: "SD-RSR + Gen-SSD adapted student-in-the-loop generation"
+
+# === W&B ===
+wandb:
+  project: search_traj_selection
+  entity: null  # set via env or CLI
+  tags: [phase0]
