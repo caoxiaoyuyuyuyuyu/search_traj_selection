@@ -253,8 +253,8 @@ def main():
     parser.add_argument("--input", type=str, required=True, help="Input JSONL with questions")
     parser.add_argument("--output", type=str, required=True, help="Output JSONL for trajectories")
     parser.add_argument("--corpus", type=str, required=True, help="Wikipedia corpus JSONL for BM25")
-    parser.add_argument("--model", type=str, default="Qwen/Qwen3-32B-AWQ")
-    parser.add_argument("--tp", type=int, default=2, help="Tensor parallel size")
+    parser.add_argument("--model", type=str, default="/root/autodl-tmp/models/Qwen3-32B-AWQ")
+    parser.add_argument("--tp", type=int, default=1, help="Tensor parallel size")
     parser.add_argument("--num_traj", type=int, default=3, help="Trajectories per question")
     parser.add_argument("--max_questions", type=int, default=None)
     args = parser.parse_args()
@@ -268,7 +268,7 @@ def main():
         questions = questions[:args.max_questions]
 
     # Initialize search engine
-    from search_engine import BM25SearchEngine
+    from generation.search_engine import BM25SearchEngine
     engine = BM25SearchEngine(corpus_path=args.corpus)
 
     # Generate trajectories

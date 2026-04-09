@@ -9,9 +9,9 @@ data_dir: /root/autodl-tmp
 
 # === Teacher Model ===
 teacher:
-  model_name: Qwen/Qwen3-32B-AWQ
+  model_name: /root/autodl-tmp/models/Qwen3-32B-AWQ
   quantization: awq
-  tensor_parallel_size: 2
+  tensor_parallel_size: 1
   max_model_len: 8192
   generation:
     temperature: 0.7
