@@ -52,6 +52,8 @@ def main():
     parser.add_argument("--num_traj", type=int, default=3)
     parser.add_argument("--dataset", type=str, default=None,
                         help="Run single dataset (hotpotqa/musique/2wikimhqa). Default: all")
+    parser.add_argument("--suffix", type=str, default="",
+                        help="Output file suffix (e.g. 'v2' → hotpotqa_trajectories_v2.jsonl)")
     args = parser.parse_args()
 
     data_dir = Path(args.data_dir)
@@ -97,7 +99,8 @@ def main():
             summary[ds_name] = {"status": "skipped", "reason": "file not found"}
             continue
 
-        output_path = output_dir / f"{ds_name}_trajectories.jsonl"
+        suffix = f"_{args.suffix}" if args.suffix else ""
+        output_path = output_dir / f"{ds_name}_trajectories{suffix}.jsonl"
         logger.info("=== Dataset: %s ===", ds_name)
 
         questions = load_questions(input_path, args.max_questions)
