@@ -14,29 +14,8 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
-# Search-reasoning prompt template
-SYSTEM_PROMPT = """You are a research assistant that answers questions by searching for information step by step.
-
-When you need to find information, use <search>your query</search> to search.
-After each search, you will receive relevant passages. Analyze them and decide whether to:
-1. Search again with a refined query if you need more information
-2. Synthesize your findings into a final answer
-
-Think through each step carefully. Show your reasoning process."""
-
-USER_TEMPLATE = """Answer the following question by searching for information step by step.
-
-Question: {question}
-
-Think step by step. Use <search>query</search> when you need to look up information."""
-
-
-def build_search_prompt(question: str) -> list[dict[str, str]]:
-    """Build the prompt for search-reasoning trajectory generation."""
-    return [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": USER_TEMPLATE.format(question=question)},
-    ]
+# Import prompt templates from prompts module
+from .prompts import build_search_prompt
 
 
 def inject_search_results(
