@@ -47,20 +47,38 @@ class SearchDecisionTokenizer:
     Search-decision tokens include:
     1. Query formulation tokens: text within <search>...</search> tags
     2. Decision markers: tokens immediately surrounding search/continue/synthesize decisions
+    3. (Extended mode) Pre-search reasoning: sentences in <think> blocks that express
+       intent to search (e.g., "let me search for...", "I need to find...")
 
     The specific markers depend on the trajectory format. This class handles
     the common format used by search-reasoning systems (Search-R1, SimpleDeepSearcher, etc.).
     """
+
+    # Patterns that indicate search-decision reasoning within <think> blocks
+    SEARCH_INTENT_PATTERNS = [
+        r"[Ll]et me search\b",
+        r"[Ll]et me look up\b",
+        r"[Ll]et me find\b",
+        r"[Ii] need to (?:search|find|look up)\b",
+        r"[Ii] should (?:search|find|look up)\b",
+        r"[Ii] (?:will|'ll) search\b",
+        r"[Nn]ow (?:let me |I (?:need to |will |should ))?(?:search|find|look up)\b",
+        r"[Ff]irst,? (?:let me |I (?:need to |will |should ))?(?:search|find|look up)\b",
+        r"[Nn]ext,? (?:let me |I (?:need to |will |should ))?(?:search|find|look up)\b",
+    ]
 
     def __init__(
         self,
         query_start: str = "<search>",
         query_end: str = "</search>",
         decision_markers: list[str] | None = None,
+        extended: bool = False,
     ):
         self.query_start = query_start
         self.query_end = query_end
         self.decision_markers = decision_markers or ["<search>", "<continue>", "<synthesize>"]
+        self.extended = extended
+        self._intent_re = re.compile("|".join(self.SEARCH_INTENT_PATTERNS))
 
     def find_search_decision_spans(self, text: str) -> list[tuple[int, int, str]]:
         """Find character-level spans of search-decision tokens.
@@ -83,6 +101,21 @@ class SearchDecisionTokenizer:
                 # Check overlap with existing spans
                 if not any(s[0] <= match.start() and match.end() <= s[1] for s in spans):
                     spans.append((match.start(), match.end(), "search_decision"))
+
+        # Extended mode: find search-intent sentences in <think> blocks
+        if self.extended:
+            for think_match in re.finditer(r"<think>(.*?)</think>", text, re.DOTALL):
+                think_text = think_match.group(1)
+                think_start = think_match.start(1)
+                # Split into sentences and check each for search intent
+                for sent_match in re.finditer(r"[^.!?\n]+[.!?\n]?", think_text):
+                    sentence = sent_match.group()
+                    if self._intent_re.search(sentence):
+                        abs_start = think_start + sent_match.start()
+                        abs_end = think_start + sent_match.end()
+                        # Check overlap with existing spans
+                        if not any(s[0] <= abs_start and abs_end <= s[1] for s in spans):
+                            spans.append((abs_start, abs_end, "search_decision"))
 
         # Sort by start position
         spans.sort(key=lambda s: s[0])
