@@ -80,7 +80,7 @@ def main():
     parser.add_argument("--max_questions", type=int, default=500)
     parser.add_argument("--num_traj", type=int, default=3)
     parser.add_argument("--dataset", type=str, default=None,
-                        help="Run single dataset (hotpotqa/musique/2wikimhqa). Default: all")
+                        help="Dataset(s) to run, comma-separated (e.g. 'hotpotqa' or 'musique,2wikimhqa'). Default: all")
     parser.add_argument("--suffix", type=str, default="",
                         help="Output file suffix (e.g. 'v2' → hotpotqa_trajectories_v2.jsonl)")
     args = parser.parse_args()
@@ -98,10 +98,11 @@ def main():
         logger.error("Corpus not found: %s", corpus_path)
         sys.exit(1)
 
-    # Filter datasets if specified
+    # Filter datasets if specified (supports comma-separated names)
     datasets_to_run = DATASETS
     if args.dataset:
-        datasets_to_run = [d for d in DATASETS if d["name"] == args.dataset]
+        requested = [s.strip() for s in args.dataset.split(",")]
+        datasets_to_run = [d for d in DATASETS if d["name"] in requested]
         if not datasets_to_run:
             logger.error("Unknown dataset: %s", args.dataset)
             sys.exit(1)
