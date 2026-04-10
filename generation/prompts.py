@@ -35,21 +35,17 @@ inside <results>...</results>. You do NOT generate the results yourself.
 starting with "Answer: ".
 
 ## Rules
-- You MUST use <search>query</search> at least once before answering. \
-Never answer from memory alone.
 - Every search query must be a short, specific keyword query (3-10 words).
 - Do NOT fabricate facts. If search results are insufficient, search again \
 with a different query.
 - You may search up to 10 times. Use as few searches as needed.
-- Always show your reasoning before and after each search.
-- Each question is INDEPENDENT. Do not reuse information from previous examples."""
+- Always show your reasoning before and after each search."""
 
 # ---------------------------------------------------------------------------
 # User template (question placeholder)
 # ---------------------------------------------------------------------------
 USER_TEMPLATE = """\
-Answer the following NEW question by searching for information step by step. \
-Do NOT reuse any information from previous examples.
+Answer the following question by searching for information step by step.
 
 Question: {question}"""
 
@@ -61,7 +57,7 @@ FEW_SHOT_EXAMPLES = [
     {
         "role": "user",
         "content": (
-            "Answer the following NEW question by searching for information step by step. Do NOT reuse any information from previous examples.\n\n"
+            "Answer the following question by searching for information step by step.\n\n"
             "Question: What is the capital of the country where the Zambezi River ends?"
         ),
     },
@@ -100,7 +96,7 @@ Answer: Maputo""",
     {
         "role": "user",
         "content": (
-            "Answer the following NEW question by searching for information step by step. Do NOT reuse any information from previous examples.\n\n"
+            "Answer the following question by searching for information step by step.\n\n"
             "Question: Were the directors of Stalker and Nostalghia born in the same country?"
         ),
     },

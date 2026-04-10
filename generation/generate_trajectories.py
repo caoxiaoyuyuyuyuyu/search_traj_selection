@@ -210,6 +210,7 @@ class TrajectoryGenerator:
         search_engine: Any,
         num_trajectories_per_question: int = 3,
         output_path: str | Path | None = None,
+        max_no_search_retries: int = 3,
     ) -> list[dict]:
         """Generate trajectories for a batch of questions.
 
@@ -218,23 +219,41 @@ class TrajectoryGenerator:
             search_engine: SearchEngine instance.
             num_trajectories_per_question: Number of trajectories per question.
             output_path: If provided, write results incrementally to JSONL.
+            max_no_search_retries: Max retries when trajectory has no search.
 
         Returns:
             List of trajectory dicts.
         """
         all_trajectories = []
+        total_retries = 0
+        no_search_after_retries = 0
         out_file = open(output_path, "w", encoding="utf-8") if output_path else None
 
         try:
             for qi, q in enumerate(questions):
                 logger.info("Question %d/%d: %s", qi + 1, len(questions), q["question"][:80])
                 for ti in range(num_trajectories_per_question):
-                    traj = self.generate_trajectory(
-                        question=q["question"],
-                        search_engine=search_engine,
-                        question_id=f"{q['id']}_{ti}",
-                    )
+                    traj = None
+                    for attempt in range(max_no_search_retries + 1):
+                        traj = self.generate_trajectory(
+                            question=q["question"],
+                            search_engine=search_engine,
+                            question_id=f"{q['id']}_{ti}",
+                        )
+                        if traj["num_search_steps"] > 0:
+                            break
+                        if attempt < max_no_search_retries:
+                            total_retries += 1
+                            logger.warning(
+                                "No search in %s attempt %d/%d, retrying",
+                                traj["id"], attempt + 1, max_no_search_retries,
+                            )
+                    if traj["num_search_steps"] == 0:
+                        traj["no_search_after_retries"] = True
+                        no_search_after_retries += 1
+                        logger.warning("No search after %d retries for %s", max_no_search_retries, traj["id"])
                     traj["trajectory_idx"] = ti
+                    traj["retry_count"] = min(attempt, max_no_search_retries) if traj.get("no_search_after_retries") else attempt
                     all_trajectories.append(traj)
 
                     if out_file:
@@ -244,7 +263,10 @@ class TrajectoryGenerator:
             if out_file:
                 out_file.close()
 
-        logger.info("Generated %d trajectories for %d questions", len(all_trajectories), len(questions))
+        logger.info(
+            "Generated %d trajectories for %d questions (retries=%d, no_search_final=%d)",
+            len(all_trajectories), len(questions), total_retries, no_search_after_retries,
+        )
         return all_trajectories
 
 
